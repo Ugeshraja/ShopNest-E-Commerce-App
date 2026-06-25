@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: html-head('Checkout')}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Global Header -->
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <main class="flex-shrink-0 py-5 my-4">
+        <div class="container">
+            
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-accent text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/cart}" class="text-accent text-decoration-none">Cart</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+                </ol>
+            </nav>
+
+            <h2 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-credit-card me-2 text-accent"></i>Secure Checkout</h2>
+
+            <div class="row g-4">
+                
+                <!-- Left Column: Shipping Address Form -->
+                <div class="col-lg-7">
+                    <div class="card rounded-4 border shadow-sm p-4 p-md-5 bg-white">
+                        <h4 class="fw-bold mb-4 text-dark border-bottom pb-2">Shipping Information</h4>
+                        
+                        <form th:action="@{/orders/checkout}" th:object="${checkoutDTO}" method="post">
+                            <div class="mb-4">
+                                <label for="address" class="form-label fw-semibold">Shipping Address</label>
+                                <textarea id="address" th:field="*{address}" rows="4" class="form-control" placeholder="Enter your full street address, city, state, zip code..." th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''"></textarea>
+                                <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                                <small class="text-muted mt-2 d-block">Please double-check your shipping coordinates. Delivery errors due to inaccurate addresses are not subject to refund policies.</small>
+                            </div>
+
+                            <button class="btn btn-custom w-100 py-3 mt-3" type="submit">
+                                <i class="fa-solid fa-lock me-2"></i>Place Secure Order
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Order Summary Snapshot -->
+                <div class="col-lg-5">
+                    <div class="card rounded-4 border shadow-sm p-4 bg-white">
+                        <h4 class="fw-bold mb-4 text-dark border-bottom pb-2">Review Items</h4>
+                        
+                        <div class="checkout-items-list mb-4 overflow-y-auto" style="max-height: 250px;">
+                            <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-light" th:each="item : ${cart.cartItems}">
+                                <img th:src="${item.product.imageUrl}" alt="Product Image" class="img-fluid rounded-3 border me-3 object-fit-cover" style="width: 50px; height: 50px;">
+                                <div class="flex-grow-1 min-w-0">
+                                    <h6 class="mb-0 text-dark fw-bold text-truncate" th:text="${item.product.name}">Product Name</h6>
+                                    <small class="text-muted" th:text="'Qty: ' + ${item.quantity} + ' @ ₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}">Qty: 1 @ ₹0.00</small>
+                                </div>
+                                <span class="fw-bold text-dark text-end ms-3" th:text="'₹' + ${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}">$0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Price summary lines -->
+                        <div class="d-flex justify-content-between mb-3 border-top pt-3">
+                            <span class="text-muted">Subtotal</span>
+                            <strong class="text-dark" th:text="'₹' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">$0.00</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Shipping</span>
+                            <span class="text-success fw-bold">Free</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between border-top pt-3">
+                            <span class="fs-5 fw-bold text-dark">Order Total</span>
+                            <strong class="fs-4 fw-extrabold text-accent" th:text="'₹' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Footer -->
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>

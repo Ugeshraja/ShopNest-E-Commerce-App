@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: html-head('Home')}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Global Header -->
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <!-- Premium Hero Section -->
+    <section class="hero-section py-5 my-0 position-relative overflow-hidden d-flex align-items-center">
+        <div class="hero-gradient-bg"></div>
+        <div class="container py-md-5 z-2 position-relative">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6 text-white text-center text-lg-start">
+                    <span class="badge bg-accent text-dark fw-bold px-3 py-2 rounded-pill mb-3 uppercase tracking-wider animated-badge">New Arrivals</span>
+                    <h1 class="hero-title fw-extrabold display-3 mb-3 text-white">Elevate Your Living & Tech</h1>
+                    <p class="hero-desc lead mb-4 opacity-90 text-light">Explore ShopNest's carefully curated premium electronics, high-fashion styles, and cozy home decor built to fit your daily aesthetics.</p>
+                    <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3">
+                        <a th:href="@{/products}" class="btn btn-custom btn-lg px-4 py-3"><i class="fa-solid fa-basket-shopping me-2"></i>Shop Catalog</a>
+                        <a th:href="@{/products(category=1)}" class="btn btn-outline-light btn-lg px-4 py-3"><i class="fa-solid fa-bolt me-2"></i>Explore Tech</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="hero-image-wrapper position-relative d-inline-block">
+                        <div class="hero-glow-back"></div>
+                        <img src="https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=600&auto=format&fit=crop&q=80" alt="Premium Watch" class="img-fluid rounded-4 shadow-2xl hero-img img-hover-zoom">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="flex-shrink-0 py-5">
+        
+        <!-- Value Propositions Section -->
+        <section class="value-props-section py-4 mb-5">
+            <div class="container">
+                <div class="row g-4 text-center">
+                    <div class="col-md-4">
+                        <div class="prop-card p-4 rounded-4 shadow-sm border h-100 transition-all duration-300 hover-translate-y">
+                            <div class="icon-circle bg-light-accent text-accent mx-auto mb-3">
+                                <i class="fa-solid fa-truck-fast fs-3"></i>
+                            </div>
+                            <h5 class="fw-bold">Free Express Delivery</h5>
+                            <p class="text-muted mb-0">On all domestic orders over ₹50. Quick shipping and easy package tracking.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="prop-card p-4 rounded-4 shadow-sm border h-100 transition-all duration-300 hover-translate-y">
+                            <div class="icon-circle bg-light-accent text-accent mx-auto mb-3">
+                                <i class="fa-solid fa-shield-halved fs-3"></i>
+                            </div>
+                            <h5 class="fw-bold">100% Secure Payments</h5>
+                            <p class="text-muted mb-0">We encrypt your transactions with bank-grade SSL security protocols.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="prop-card p-4 rounded-4 shadow-sm border h-100 transition-all duration-300 hover-translate-y">
+                            <div class="icon-circle bg-light-accent text-accent mx-auto mb-3">
+                                <i class="fa-solid fa-handshake-angle fs-3"></i>
+                            </div>
+                            <h5 class="fw-bold">24/7 Dedicated Support</h5>
+                            <p class="text-muted mb-0">Our professional customer support team is always available to assist you.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="categories-section py-4 mb-5">
+            <div class="container">
+                <div class="section-header text-center mb-5">
+                    <h2 class="fw-bold section-title position-relative d-inline-block pb-3">Browse Categories</h2>
+                    <p class="text-muted">Find handpicked items tailored specifically for your lifestyle</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-6 col-lg-3" th:each="cat : ${allCategories}">
+                        <div class="category-card rounded-4 overflow-hidden position-relative shadow-sm transition-all duration-300 hover-scale">
+                            <div class="category-card-bg" th:style="'background-image: url(' + 
+                                (${cat.name == 'Electronics'} ? 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400&q=80' : 
+                                 (${cat.name == 'Fashion'} ? 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80' : 
+                                  (${cat.name == 'Home & Living'} ? 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&q=80' : 
+                                   'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&q=80'))) + ')'"></div>
+                            <div class="category-overlay p-4 d-flex flex-column justify-content-end text-white position-absolute start-0 top-0 w-100 h-100">
+                                <h4 class="fw-bold mb-1" th:text="${cat.name}">Category</h4>
+                                <p class="fs-xs opacity-75 text-truncate d-none d-md-block" th:text="${cat.description}">Description</p>
+                                <a th:href="@{/products(category=${cat.id})}" class="btn btn-sm btn-custom align-self-start mt-2">Explore <i class="fa-solid fa-chevron-right ms-1"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Products Section -->
+        <section class="featured-products py-4 mb-3">
+            <div class="container">
+                <div class="section-header text-center mb-5">
+                    <h2 class="fw-bold section-title position-relative d-inline-block pb-3">Featured Products</h2>
+                    <p class="text-muted">A collection of our top trending high-quality listings</p>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Iterating featured products -->
+                    <div class="col-md-6 col-lg-4" th:each="product : ${featuredProducts}">
+                        <div class="product-card border rounded-4 overflow-hidden shadow-sm bg-white h-100 d-flex flex-column transition-all duration-300 hover-translate-y">
+                            <div class="product-img-wrapper position-relative overflow-hidden">
+                                <img th:src="${product.imageUrl}" class="product-img w-100 object-fit-cover" alt="Product Image">
+                                <div class="product-badge position-absolute top-3 start-3">
+                                    <span class="badge bg-dark fw-medium" th:text="${product.category.name}">Category</span>
+                                </div>
+                            </div>
+                            <div class="p-4 d-flex flex-column flex-grow-1">
+                                <h5 class="product-title fw-bold text-dark mb-2 text-truncate-2" th:text="${product.name}">Product Name</h5>
+                                <p class="product-desc text-muted fs-sm flex-grow-1 text-truncate-3" th:text="${product.description}">Product Description</p>
+                                <div class="d-flex align-items-center justify-content-between mt-3 pt-3 border-top border-light">
+                                    <span class="product-price fs-4 fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(product.price, 1, 2)}">$0.00</span>
+                                    <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-sm btn-outline-custom">View details <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <a th:href="@{/products}" class="btn btn-custom btn-lg px-4">View All Products <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Footer -->
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>

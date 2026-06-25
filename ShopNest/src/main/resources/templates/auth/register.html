@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: html-head('Register')}"></head>
+<body class="auth-bg d-flex align-items-center min-vh-100 py-5">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                
+                <!-- Auth Card Container -->
+                <div class="auth-card p-4 p-md-5 shadow-lg rounded-4">
+                    
+                    <div class="text-center mb-4">
+                        <a class="navbar-brand d-inline-flex align-items-center mb-3 text-dark" th:href="@{/}">
+                            <i class="fa-solid fa-feather-pointed brand-icon me-2"></i>
+                            <span class="fs-2 fw-bold">Shop<span class="brand-accent">Nest</span></span>
+                        </a>
+                        <h4 class="fw-semibold text-dark">Create Account</h4>
+                        <p class="text-muted">Start listing and purchasing high-quality items</p>
+                    </div>
+
+                    <!-- Global error display -->
+                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        <span th:text="${errorMessage}">Error occurred</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Registration Form -->
+                    <form th:action="@{/register}" th:object="${registerDTO}" method="post">
+                        
+                        <!-- Name Input -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" class="form-control" id="name" th:field="*{name}" placeholder="John Doe" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                        </div>
+
+                        <!-- Email Input -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" placeholder="name@example.com" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                        </div>
+
+                        <!-- Password Input -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="At least 6 characters" th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                        </div>
+
+                        <!-- Confirm Password Input -->
+                        <div class="mb-4">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                                <input type="password" class="form-control" id="confirmPassword" th:field="*{confirmPassword}" placeholder="Repeat password" th:classappend="${#fields.hasErrors('confirmPassword')} ? 'is-invalid' : ''">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                        </div>
+
+                        <button class="btn btn-custom w-100 py-2.5 mb-3" type="submit">Sign Up</button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="mb-0 text-muted">Already have an account? <a th:href="@{/login}" class="text-accent text-decoration-none fw-medium">Sign in instead</a></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>

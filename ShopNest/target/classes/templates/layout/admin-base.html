@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="html-head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - ShopNest Admin'">Admin Console</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Outfit and Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Admin Style Sheet -->
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="admin-body">
+    <!-- Admin Wrapper Grid Layout -->
+    <div class="admin-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside th:fragment="sidebar" class="admin-sidebar shadow-lg">
+            <div class="sidebar-brand-wrapper px-4 py-4 d-flex align-items-center justify-content-between">
+                <a class="navbar-brand d-flex align-items-center text-white" th:href="@{/}">
+                    <i class="fa-solid fa-feather-pointed brand-icon me-2"></i>
+                    <span class="fs-4 fw-bold">Shop<span class="brand-accent">Nest</span></span>
+                </a>
+            </div>
+            
+            <div class="admin-user-card px-4 py-3 d-flex align-items-center mb-4">
+                <div class="avatar-circle avatar-admin me-3" th:text="${#strings.substring(currentUser.name, 0, 1).toUpperCase()}">A</div>
+                <div>
+                    <h6 class="text-white mb-0" th:text="${currentUser.name}">Admin User</h6>
+                    <small class="text-accent fs-xs">System Administrator</small>
+                </div>
+            </div>
+            <nav class="sidebar-nav px-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link admin-nav-link" th:classappend="${activeTab == 'dashboard' ? 'active' : ''}" th:href="@{/admin}">
+                            <i class="fa-solid fa-chart-line me-3"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link admin-nav-link" th:classappend="${activeTab == 'products' ? 'active' : ''}" th:href="@{/admin/products}">
+                            <i class="fa-solid fa-boxes-stacked me-3"></i>Products
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link admin-nav-link" th:classappend="${activeTab == 'orders' ? 'active' : ''}" th:href="@{/admin/orders}">
+                            <i class="fa-solid fa-cart-flatbed me-3"></i>Orders
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4 border-top border-secondary pt-3">
+                        <a class="nav-link admin-nav-link text-warning" th:href="@{/}">
+                            <i class="fa-solid fa-store me-3"></i>Back to Shop
+                        </a>
+                    </li>
+                    <li class="nav-item mt-2">
+                        <a class="nav-link admin-nav-link text-danger" th:href="@{/logout}">
+                            <i class="fa-solid fa-right-from-bracket me-3"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        <!-- Main Workspace -->
+        <div class="admin-content-area">
+            <!-- Header Top Bar -->
+            <header th:fragment="topbar" class="admin-topbar px-4 py-3 d-flex align-items-center justify-content-between bg-white border-bottom shadow-sm">
+                <div class="d-flex align-items-center">
+                    <h5 class="mb-0 text-dark fw-semibold" th:text="${pageTitle}">Admin Workspace</h5>
+                </div>
+                <div class="d-flex align-items-center">
+                    <a th:href="@{/}" class="btn btn-sm btn-outline-custom me-3"><i class="fa-solid fa-eye me-2"></i>View Shop</a>
+                    <span class="text-muted fs-sm me-3" th:text="'Logged in as: ' + ${currentUser.email}">admin@shopnest.com</span>
+                    <a th:href="@{/logout}" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-power-off"></i></a>
+                </div>
+            </header>
+            <!-- Render slots -->
+            <main class="admin-main-container p-4">
+                <!-- Render area -->
+            </main>
+        </div>
+    </div>
+    <!-- Admin script bundle fragment -->
+    <div th:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script th:src="@{/static/js/main.js}"></script>
+        <script src="/static/js/main.js"></script>
+    </div>
+</body>
+</html>

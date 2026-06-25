@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: html-head('Shopping Cart')}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Global Header -->
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <main class="flex-shrink-0 py-5 my-4">
+        <div class="container">
+            
+            <h2 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-basket-shopping me-2 text-accent"></i>Your Shopping Cart</h2>
+
+            <!-- Feedback Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                <span th:text="${successMessage}">Success message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>
+                <span th:text="${errorMessage}">Error message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Empty Cart Layout -->
+            <div th:if="${cart.cartItems.isEmpty()}" class="text-center py-5 shadow-sm border rounded-4 bg-white">
+                <div class="empty-state-icon text-muted mb-3"><i class="fa-solid fa-cart-shopping display-1"></i></div>
+                <h4 class="fw-bold text-dark">Your cart is empty</h4>
+                <p class="text-muted mb-4">Add products to your cart to start shopping.</p>
+                <a th:href="@{/products}" class="btn btn-custom px-4"><i class="fa-solid fa-chevron-left me-2"></i>Browse Products</a>
+            </div>
+
+            <!-- Cart Content Grid -->
+            <div class="row g-4" th:unless="${cart.cartItems.isEmpty()}">
+                
+                <!-- Cart Items List (Left Column) -->
+                <div class="col-lg-8">
+                    <div class="card rounded-4 border shadow-sm p-4 bg-white">
+                        <div class="table-responsive">
+                            <table class="table align-middle cart-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="border-0">Product</th>
+                                        <th scope="col" class="border-0 text-center">Quantity</th>
+                                        <th scope="col" class="border-0 text-end">Price</th>
+                                        <th scope="col" class="border-0 text-end">Total</th>
+                                        <th scope="col" class="border-0 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${cart.cartItems}">
+                                        <!-- Product Snapshot -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img th:src="${item.product.imageUrl}" alt="Product Image" class="img-fluid rounded-3 border me-3 object-fit-cover" style="width: 70px; height: 70px;">
+                                                <div>
+                                                    <h6 class="mb-1 text-dark fw-bold text-truncate-2" th:text="${item.product.name}">Product Name</h6>
+                                                    <span class="badge bg-light text-muted border fs-xs" th:text="${item.product.category.name}">Category</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Quantity Form Modifier -->
+                                        <td class="text-center">
+                                            <form th:action="@{/cart/update}" method="post" class="d-inline-flex justify-content-center align-items-center cart-qty-form">
+                                                <input type="hidden" name="cartItemId" th:value="${item.id}">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 qty-btn-minus" onclick="decreaseQty(this)">-</button>
+                                                <input type="number" name="quantity" th:value="${item.quantity}" min="1" th:max="${item.product.stock}" class="form-control form-control-sm text-center mx-1 qty-input" style="width: 60px;" onchange="this.form.submit()">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 qty-btn-plus" onclick="increaseQty(this)">+</button>
+                                            </form>
+                                        </td>
+                                        
+                                        <!-- Single Price -->
+                                        <td class="text-end fw-medium" th:text="'₹' + ${#numbers.formatDecimal(item.product.price, 1, 2)}">$0.00</td>
+                                        
+                                        <!-- Subtotal Item Price -->
+                                        <td class="text-end fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2)}">$0.00</td>
+                                        
+                                        <!-- Remove Item Button -->
+                                        <td class="text-center">
+                                            <form th:action="@{/cart/remove}" method="post">
+                                                <input type="hidden" name="cartItemId" th:value="${item.id}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkout Summary Box (Right Column) -->
+                <div class="col-lg-4">
+                    <div class="card rounded-4 border shadow-sm p-4 bg-white cart-summary-card">
+                        <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Order Summary</h5>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Subtotal</span>
+                            <strong class="text-dark" th:text="'₹' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">$0.00</strong>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Shipping</span>
+                            <span class="text-success fw-bold">Free</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-4 border-top pt-3">
+                            <span class="fs-5 fw-bold text-dark">Total</span>
+                            <strong class="fs-4 fw-extrabold text-accent" th:text="'₹' + ${#numbers.formatDecimal(cartTotal, 1, 2)}">$0.00</strong>
+                        </div>
+
+                        <a th:href="@{/orders/checkout}" class="btn btn-custom w-100 py-3"><i class="fa-solid fa-lock me-2"></i>Proceed to Checkout</a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Footer -->
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/base :: scripts}"></div>
+
+    <!-- JS Helper function for Qty Adjustment Buttons in Cart Table -->
+    <script>
+        function decreaseQty(btn) {
+            var input = btn.parentNode.querySelector('.qty-input');
+            var val = parseInt(input.value);
+            if (val > 1) {
+                input.value = val - 1;
+                btn.form.submit();
+            }
+        }
+        function increaseQty(btn) {
+            var input = btn.parentNode.querySelector('.qty-input');
+            var val = parseInt(input.value);
+            var max = parseInt(input.getAttribute('max'));
+            if (val < max) {
+                input.value = val + 1;
+                btn.form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

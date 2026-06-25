@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/admin-base :: html-head('Dashboard')}"></head>
+<body class="admin-body">
+
+    <div class="admin-wrapper" th:with="pageTitle='Overview Dashboard'">
+        
+        <!-- Admin Sidebar -->
+        <aside th:replace="~{layout/admin-base :: sidebar}"></aside>
+
+        <!-- Main Content Area -->
+        <div class="admin-content-area d-flex flex-column min-vh-100">
+            <!-- Top Nav Bar -->
+            <header th:replace="~{layout/admin-base :: topbar}"></header>
+
+            <!-- Dashboard Content Container -->
+            <main class="admin-main-container p-4 flex-grow-1">
+                
+                <!-- Feedback Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i>
+                    <span th:text="${successMessage}">Success!</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Stats Cards Section -->
+                <div class="row g-4 mb-4">
+                    
+                    <!-- Total Users -->
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card stat-card rounded-4 border-0 shadow-sm p-4 bg-white transition-all hover-translate-y">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="text-muted fs-sm uppercase tracking-wider">Total Users</span>
+                                    <h3 class="fw-extrabold text-dark mt-1 mb-0" th:text="${userCount}">0</h3>
+                                </div>
+                                <div class="stat-icon-circle bg-light-primary text-primary">
+                                    <i class="fa-solid fa-users fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-muted fs-xs"><i class="fa-solid fa-arrow-up text-success me-1"></i> Active user profiles</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Products -->
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card stat-card rounded-4 border-0 shadow-sm p-4 bg-white transition-all hover-translate-y">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="text-muted fs-sm uppercase tracking-wider">Total Products</span>
+                                    <h3 class="fw-extrabold text-dark mt-1 mb-0" th:text="${productCount}">0</h3>
+                                </div>
+                                <div class="stat-icon-circle bg-light-warning text-warning">
+                                    <i class="fa-solid fa-boxes-stacked fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-muted fs-xs"><i class="fa-solid fa-arrow-up text-success me-1"></i> Listed catalog items</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Orders -->
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card stat-card rounded-4 border-0 shadow-sm p-4 bg-white transition-all hover-translate-y">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="text-muted fs-sm uppercase tracking-wider">Total Orders</span>
+                                    <h3 class="fw-extrabold text-dark mt-1 mb-0" th:text="${orderCount}">0</h3>
+                                </div>
+                                <div class="stat-icon-circle bg-light-info text-info">
+                                    <i class="fa-solid fa-cart-flatbed fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-muted fs-xs"><i class="fa-solid fa-arrow-up text-success me-1"></i> Checkout transactions</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Revenue -->
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card stat-card rounded-4 border-0 shadow-sm p-4 bg-white transition-all hover-translate-y">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="text-muted fs-sm uppercase tracking-wider">Total Revenue</span>
+                                    <h3 class="fw-extrabold text-dark mt-1 mb-0" th:text="'₹' + ${#numbers.formatDecimal(totalRevenue, 1, 2)}">$0.00</h3>
+                                </div>
+                                <div class="stat-icon-circle bg-light-success text-success">
+                                    <i class="fa-solid fa-wallet fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-muted fs-xs"><i class="fa-solid fa-arrow-up text-success me-1"></i> Non-cancelled totals</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Admin Action shortcuts -->
+                <div class="row g-4">
+                    
+                    <!-- Quick Links Card -->
+                    <div class="col-lg-6">
+                        <div class="card rounded-4 border-0 shadow-sm p-4 bg-white h-100">
+                            <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">Administrative Shortcuts</h5>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <a th:href="@{/admin/products/add}" class="btn btn-outline-custom w-100 py-3 d-flex flex-column align-items-center rounded-3">
+                                        <i class="fa-solid fa-circle-plus fs-3 mb-2 text-accent"></i>
+                                        <span>Add New Product</span>
+                                    </a>
+                                </div>
+                                <div class="col-sm-6">
+                                    <a th:href="@{/admin/products}" class="btn btn-outline-custom w-100 py-3 d-flex flex-column align-items-center rounded-3">
+                                        <i class="fa-solid fa-boxes-packing fs-3 mb-2 text-accent"></i>
+                                        <span>Manage Catalog</span>
+                                    </a>
+                                </div>
+                                <div class="col-sm-6">
+                                    <a th:href="@{/admin/orders}" class="btn btn-outline-custom w-100 py-3 d-flex flex-column align-items-center rounded-3">
+                                        <i class="fa-solid fa-cart-flatbed-suitcase fs-3 mb-2 text-accent"></i>
+                                        <span>Track Orders</span>
+                                    </a>
+                                </div>
+                                <div class="col-sm-6">
+                                    <a th:href="@{/}" class="btn btn-outline-custom w-100 py-3 d-flex flex-column align-items-center rounded-3">
+                                        <i class="fa-solid fa-globe fs-3 mb-2 text-accent"></i>
+                                        <span>Visit Homepage</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Diagnostics Info -->
+                    <div class="col-lg-6">
+                        <div class="card rounded-4 border-0 shadow-sm p-4 bg-white h-100">
+                            <h5 class="fw-bold mb-4 text-dark border-bottom pb-2">System Diagnostics</h5>
+                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Spring Boot Framework:</span>
+                                <span class="badge bg-light text-dark border font-monospace">v3.3.0</span>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Database Engine:</span>
+                                <span class="badge bg-light text-dark border font-monospace">MySQL Server 8.x</span>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Java Runtime (JRE):</span>
+                                <span class="badge bg-light text-dark border font-monospace">JDK 17+</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Security Encryption Dialect:</span>
+                                <span class="badge bg-success text-white border font-monospace">BCrypt (10 rounds)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/admin-base :: scripts}"></div>
+</body>
+</html>

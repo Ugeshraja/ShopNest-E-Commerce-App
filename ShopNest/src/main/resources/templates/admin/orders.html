@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/admin-base :: html-head('Orders Management')}"></head>
+<body class="admin-body">
+
+    <div class="admin-wrapper" th:with="pageTitle='Manage Customer Orders'">
+        
+        <!-- Admin Sidebar -->
+        <aside th:replace="~{layout/admin-base :: sidebar}"></aside>
+
+        <!-- Main Content Area -->
+        <div class="admin-content-area d-flex flex-column min-vh-100">
+            <!-- Top Nav Bar -->
+            <header th:replace="~{layout/admin-base :: topbar}"></header>
+
+            <!-- Main Order Tracking Workspace -->
+            <main class="admin-main-container p-4 flex-grow-1">
+                
+                <!-- Feedback Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i>
+                    <span th:text="${successMessage}">Success!</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    <span th:text="${errorMessage}">Error!</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Orders Table Card -->
+                <div class="card rounded-4 border-0 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold mb-4 text-dark border-bottom pb-3">Received Transactions</h5>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Order ID</th>
+                                    <th scope="col">Customer</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Address</th>
+                                    <th scope="col" class="text-end">Total</th>
+                                    <th scope="col" class="text-center">Status</th>
+                                    <th scope="col" class="text-center">Update Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${orders}">
+                                    <!-- Order ID -->
+                                    <td class="fw-bold">#<span th:text="${order.id}">1</span></td>
+                                    
+                                    <!-- Customer Details -->
+                                    <td>
+                                        <div class="fw-bold text-dark" th:text="${order.user.name}">John Doe</div>
+                                        <small class="text-muted text-xs d-block" th:text="${order.user.email}">john@example.com</small>
+                                    </td>
+                                    
+                                    <!-- Date -->
+                                    <td class="text-muted" th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}">2026-06-25 09:00</td>
+                                    
+                                    <!-- Address -->
+                                    <td class="text-truncate-2 text-muted" style="max-width: 200px;" th:text="${order.address}">Shipping Address</td>
+                                    
+                                    <!-- Total Amount -->
+                                    <td class="text-end fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$0.00</td>
+                                    
+                                    <!-- Current Status Badge -->
+                                    <td class="text-center">
+                                        <span class="badge px-3 py-2 rounded-pill fs-xxs" 
+                                              th:text="${order.status}"
+                                              th:classappend="${order.status == T(com.shopnest.model.Order.OrderStatus).PENDING ? 'bg-secondary text-white' : 
+                                                              (order.status == T(com.shopnest.model.Order.OrderStatus).CONFIRMED ? 'bg-primary text-white' : 
+                                                              (order.status == T(com.shopnest.model.Order.OrderStatus).SHIPPED ? 'bg-info text-dark' : 
+                                                              (order.status == T(com.shopnest.model.Order.OrderStatus).DELIVERED ? 'bg-success text-white' : 
+                                                              'bg-danger text-white')))}">
+                                            PENDING
+                                        </span>
+                                    </td>
+                                    
+                                    <!-- Status Update Action -->
+                                    <td class="text-center">
+                                        <!-- Inline form to change status dropdown selection -->
+                                        <form th:action="@{/admin/orders/status}" method="post" class="d-inline-flex align-items-center gap-2">
+                                            <input type="hidden" name="orderId" th:value="${order.id}">
+                                            <select name="status" class="form-select form-select-sm bg-white border-secondary-subtle" onchange="this.form.submit()" style="width: 140px;">
+                                                <option th:each="st : ${allStatuses}" 
+                                                        th:value="${st}" 
+                                                        th:text="${st}" 
+                                                        th:selected="${st == order.status}">STATUS</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                </tr>
+
+                                <tr th:if="${orders.isEmpty()}">
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-receipt fs-2 mb-2 d-block"></i>
+                                        <span>No customer orders have been recorded in the database yet.</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/admin-base :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: html-head('Order History')}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Global Header -->
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <main class="flex-shrink-0 py-5 my-4">
+        <div class="container">
+            
+            <h2 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-clock-rotate-left me-2 text-accent"></i>Your Purchase History</h2>
+
+            <!-- Empty History State -->
+            <div th:if="${orders.isEmpty()}" class="text-center py-5 shadow-sm border rounded-4 bg-white">
+                <div class="empty-state-icon text-muted mb-3"><i class="fa-solid fa-receipt display-1"></i></div>
+                <h4 class="fw-bold text-dark">No orders found</h4>
+                <p class="text-muted mb-4">You haven't placed any orders yet. Explore our catalog and start shopping!</p>
+                <a th:href="@{/products}" class="btn btn-custom px-4"><i class="fa-solid fa-chevron-left me-2"></i>Browse Catalog</a>
+            </div>
+
+            <!-- Orders List Accordion/Grid -->
+            <div th:unless="${orders.isEmpty()}">
+                <div class="card rounded-4 border shadow-sm p-4 bg-white">
+                    <div class="table-responsive">
+                        <table class="table align-middle history-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="border-0">Order ID</th>
+                                    <th scope="col" class="border-0">Date</th>
+                                    <th scope="col" class="border-0">Delivery Address</th>
+                                    <th scope="col" class="border-0 text-end">Total Amount</th>
+                                    <th scope="col" class="border-0 text-center">Status</th>
+                                    <th scope="col" class="border-0 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${orders}">
+                                    <!-- Order ID -->
+                                    <td class="fw-bold">#<span th:text="${order.id}">1</span></td>
+                                    
+                                    <!-- Date -->
+                                    <td class="text-muted" th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}">2026-06-25 09:00</td>
+                                    
+                                    <!-- Delivery Address snippet -->
+                                    <td class="text-truncate-2" style="max-width: 250px;" th:text="${order.address}">Shipping Address</td>
+                                    
+                                    <!-- Total Amount -->
+                                    <td class="text-end fw-bold text-dark" th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}">$0.00</td>
+                                    
+                                    <!-- Order Status Badge -->
+                                    <td class="text-center">
+                                        <span class="badge px-3 py-2 rounded-pill fs-xs" 
+                                              th:text="${order.status}"
+                                              th:classappend="${order.status == T(com.shopnest.model.Order.OrderStatus).PENDING ? 'bg-secondary text-white' : 
+                                                              (order.status == T(com.shopnest.model.Order.OrderStatus).CONFIRMED ? 'bg-primary text-white' : 
+                                                              (order.status == T(com.shopnest.model.Order.OrderStatus).SHIPPED ? 'bg-info text-dark' : 
+                                                              (order.status == T(com.shopnest.model.Order.OrderStatus).DELIVERED ? 'bg-success text-white' : 
+                                                              'bg-danger text-white')))}">
+                                            PENDING
+                                        </span>
+                                    </td>
+                                    
+                                    <!-- Receipt Details Trigger -->
+                                    <td class="text-center">
+                                        <a th:href="@{/orders/confirmation/{id}(id=${order.id})}" class="btn btn-sm btn-outline-custom">
+                                            <i class="fa-solid fa-receipt me-1"></i>Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Footer -->
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: html-head(${product.name})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Global Header -->
+    <header th:replace="~{layout/base :: navbar}"></header>
+
+    <main class="flex-shrink-0 py-5 my-4">
+        <div class="container">
+            
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-accent text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/products(category=${product.category.id})}" th:text="${product.category.name}" class="text-accent text-decoration-none">Category</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">Product Name</li>
+                </ol>
+            </nav>
+
+            <!-- Detailed Grid -->
+            <div class="row g-5">
+                
+                <!-- Left Column: Product Image -->
+                <div class="col-md-6 col-lg-5">
+                    <div class="product-detail-img-card p-2 border rounded-4 bg-white shadow-sm overflow-hidden text-center position-relative">
+                        <img th:src="${product.imageUrl}" class="img-fluid rounded-3 w-100 object-fit-contain" style="max-height: 450px;" alt="Product Image">
+                        <span th:if="${product.stock == 0}" class="position-absolute top-3 end-3 badge bg-danger fs-6 px-3 py-2 shadow-sm">Out of Stock</span>
+                    </div>
+                </div>
+
+                <!-- Right Column: Product purchasing controls -->
+                <div class="col-md-6 col-lg-7">
+                    <div class="product-detail-content d-flex flex-column h-100">
+                        
+                        <div class="mb-3">
+                            <span class="badge bg-light text-dark border px-3 py-2 fs-xs mb-2" th:text="${product.category.name}">Category</span>
+                            <h1 class="fw-bold text-dark display-5 mb-2" th:text="${product.name}">Product Name</h1>
+                            
+                            <!-- Stock indicators -->
+                            <div class="d-flex align-items-center mb-4">
+                                <div th:if="${product.stock > 0}" class="d-flex align-items-center text-success">
+                                    <i class="fa-solid fa-circle-check me-2"></i>
+                                    <span class="fw-medium" th:text="'In Stock (' + ${product.stock} + ' available)'">In Stock</span>
+                                </div>
+                                <div th:if="${product.stock == 0}" class="d-flex align-items-center text-danger">
+                                    <i class="fa-solid fa-circle-xmark me-2"></i>
+                                    <span class="fw-medium">Out of Stock</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price display -->
+                        <div class="detail-price-box p-3 bg-light rounded-3 border mb-4">
+                            <span class="text-muted fs-sm d-block mb-1">Selling Price</span>
+                            <h2 class="fw-bold text-dark mb-0" th:text="'₹' + ${#numbers.formatDecimal(product.price, 1, 2)}">$0.00</h2>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <h5 class="fw-semibold text-dark mb-2">Description</h5>
+                            <p class="text-muted lead fs-sm lh-relaxed" th:text="${product.description}">Product description text goes here.</p>
+                        </div>
+
+                        <div class="mt-auto border-top pt-4">
+                            <!-- Add to Cart Form -->
+                            <form th:action="@{/cart/add}" method="post" class="row g-3 align-items-center" th:if="${product.stock > 0}">
+                                <input type="hidden" name="productId" th:value="${product.id}">
+                                
+                                <div class="col-auto">
+                                    <label for="quantity" class="form-label mb-0 fw-semibold">Quantity:</label>
+                                </div>
+                                <div class="col-3 col-sm-2">
+                                    <input type="number" id="quantity" name="quantity" class="form-control" value="1" min="1" th:max="${product.stock}" required>
+                                </div>
+                                <div class="col-8 col-sm-6 col-md-5">
+                                    <button type="submit" class="btn btn-custom w-100 py-2.5"><i class="fa-solid fa-cart-plus me-2"></i>Add to Cart</button>
+                                </div>
+                            </form>
+
+                            <!-- Out of Stock placeholder -->
+                            <div th:unless="${product.stock > 0}" class="alert alert-warning mb-0 border shadow-sm p-3 rounded-3">
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                                <span>We are currently out of stock for this item. Subscribe to email alerts to get notified when it is back.</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Footer -->
+    <footer th:replace="~{layout/base :: footer}"></footer>
+
+    <!-- Script imports -->
+    <div th:replace="~{layout/base :: scripts}"></div>
+</body>
+</html>
