@@ -455,3 +455,29 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* --- Professional styling for Category filter items --- */
+.category-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* modern card spacing */
+}
+.category-filter-group .list-group-item {
+    border-radius: 8px !important; /* rounded border radius */
+    padding: 11px 18px !important; /* premium padding spacing */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #475569 !important; /* readable dark slate text */
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+.category-filter-group .list-group-item.active {
+    background: linear-gradient(135deg, var(--clr-accent) 0%, #4f46e5 100%) !important; /* glowing brand gradient */
+    color: var(--clr-white) !important; /* white text */
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important; /* subtle elevation glow */
+    font-weight: 700 !important;
+}
+.category-filter-group .list-group-item:hover:not(.active) {
+    background-color: rgba(99, 102, 241, 0.05) !important; /* subtle background hover tint */
+    color: var(--clr-accent) !important;
+    padding-left: 24px !important; /* elegant slide-in interaction */
+}
