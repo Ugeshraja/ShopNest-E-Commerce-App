@@ -24,7 +24,7 @@ public class Category {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String description;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -35,7 +35,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column(name = "created_at", insertable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist

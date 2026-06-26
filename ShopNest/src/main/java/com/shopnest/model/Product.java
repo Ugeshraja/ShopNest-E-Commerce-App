@@ -25,7 +25,7 @@ public class Product {
     @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String description;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -41,7 +41,7 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(name = "created_at", insertable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist
