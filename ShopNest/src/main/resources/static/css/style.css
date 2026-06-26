@@ -392,26 +392,32 @@ h1, h2, h3, h4, h5, h6 {
 .footer {
     background-color: var(--clr-primary);
     border-top: 5px solid var(--clr-accent);
+    color: #e2e8f0 !important; /* light text color */
+}
+.footer .text-muted {
+    color: #cbd5e1 !important; /* override bootstrap dark text-muted to light grey */
 }
 .footer-text {
     font-size: 0.9rem;
     line-height: 1.6;
+    color: #cbd5e1 !important;
 }
 .footer-heading {
+    color: #ffffff !important; /* bright white for titles */
     font-family: var(--font-head);
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: 0.5px;
 }
 .footer-link {
-    color: #94a3b8;
+    color: #cbd5e1 !important; /* light slate grey for links */
     text-decoration: none;
     transition: all 0.2s ease;
     display: inline-block;
     padding: 4px 0;
 }
 .footer-link:hover {
-    color: var(--clr-accent);
+    color: var(--clr-accent) !important;
     transform: translateX(4px);
 }
 .social-icon-link {
