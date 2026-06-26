@@ -31,8 +31,8 @@ public class User {
     @Column(nullable = false, length = 255)
     private String password;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "ENUM('USER', 'ADMIN')")
     private Role role;
 
     @Column(name = "created_at", insertable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
