@@ -11,17 +11,18 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Production-ready DataSource Configuration supporting Render, Aiven, Supabase, Neon, Railway
  * and local environments.
  *
- * Automatically converts postgres:// and postgresql:// URIs into valid JDBC URLs,
- * extracts and decodes credentials, enforces sslmode=require for cloud hosts,
- * and outputs clear diagnostic logs to help troubleshoot connectivity.
+ * Automatically converts postgres://, postgresql://, and jdbc:postgresql:// URIs into valid JDBC URLs,
+ * strips embedded credentials from host authorities to avoid UnknownHostException,
+ * enforces sslmode=require for cloud hosts, and outputs crystal-clear diagnostic logs.
  */
 @Configuration
 public class DataSourceConfig {
@@ -40,26 +41,26 @@ public class DataSourceConfig {
     @Value("${SPRING_DATASOURCE_URL:#{null}}")
     private String springDatasourceUrl;
 
-    @Value("${POSTGRES_URL:#{null}}")
-    private String postgresUrl;
+    @Value("${spring.datasource.url:#{null}}")
+    private String propDatasourceUrl;
 
-    @Value("${DB_URL:#{null}}")
-    private String dbUrl;
-
-    @Value("${DB_HOST:#{null}}")
-    private String dbHost;
-
-    @Value("${DB_PORT:#{null}}")
-    private String dbPort;
-
-    @Value("${DB_NAME:#{null}}")
-    private String dbName;
-
-    @Value("${spring.datasource.username:#{null}}")
+    @Value("${SPRING_DATASOURCE_USERNAME:#{null}}")
     private String springDatasourceUsername;
 
-    @Value("${spring.datasource.password:#{null}}")
+    @Value("${spring.datasource.username:#{null}}")
+    private String propDatasourceUsername;
+
+    @Value("${SPRING_DATASOURCE_PASSWORD:#{null}}")
     private String springDatasourcePassword;
+
+    @Value("${spring.datasource.password:#{null}}")
+    private String propDatasourcePassword;
+
+    @Value("${SPRING_DATASOURCE_DRIVER_CLASS_NAME:#{null}}")
+    private String springDatasourceDriver;
+
+    @Value("${spring.datasource.driver-class-name:#{null}}")
+    private String propDatasourceDriver;
 
     @Value("${DB_USER:#{null}}")
     private String envDbUser;
@@ -75,122 +76,115 @@ public class DataSourceConfig {
         String rawUrl = null;
         String source = null;
 
-        // 1. Check all possible cloud database URL environment variables in priority order
-        if (StringUtils.hasText(databaseUrl)) {
-            rawUrl = databaseUrl.trim();
+        // Pick URL in priority order
+        if (StringUtils.hasText(springDatasourceUrl)) {
+            rawUrl = clean(springDatasourceUrl);
+            source = "SPRING_DATASOURCE_URL";
+        } else if (StringUtils.hasText(databaseUrl)) {
+            rawUrl = clean(databaseUrl);
             source = "DATABASE_URL";
         } else if (StringUtils.hasText(internalDatabaseUrl)) {
-            rawUrl = internalDatabaseUrl.trim();
+            rawUrl = clean(internalDatabaseUrl);
             source = "INTERNAL_DATABASE_URL";
         } else if (StringUtils.hasText(externalDatabaseUrl)) {
-            rawUrl = externalDatabaseUrl.trim();
+            rawUrl = clean(externalDatabaseUrl);
             source = "EXTERNAL_DATABASE_URL";
-        } else if (StringUtils.hasText(springDatasourceUrl)) {
-            rawUrl = springDatasourceUrl.trim();
-            source = "SPRING_DATASOURCE_URL / spring.datasource.url";
-        } else if (StringUtils.hasText(postgresUrl)) {
-            rawUrl = postgresUrl.trim();
-            source = "POSTGRES_URL";
-        } else if (StringUtils.hasText(dbUrl)) {
-            rawUrl = dbUrl.trim();
-            source = "DB_URL";
-        } else if (StringUtils.hasText(dbHost) && StringUtils.hasText(dbName)) {
-            // Built from individual parts (DB_HOST, DB_NAME, etc.)
-            String port = StringUtils.hasText(dbPort) ? dbPort.trim() : "5432";
-            rawUrl = "jdbc:postgresql://" + dbHost.trim() + ":" + port + "/" + dbName.trim() + "?sslmode=require";
-            source = "DB_HOST + DB_NAME";
+        } else if (StringUtils.hasText(propDatasourceUrl)) {
+            rawUrl = clean(propDatasourceUrl);
+            source = "spring.datasource.url";
         }
 
-        String username = StringUtils.hasText(springDatasourceUsername) ? springDatasourceUsername : envDbUser;
-        String password = StringUtils.hasText(springDatasourcePassword) ? springDatasourcePassword : envDbPassword;
+        String username = firstNonEmpty(clean(springDatasourceUsername), clean(propDatasourceUsername), clean(envDbUser));
+        String password = firstNonEmpty(clean(springDatasourcePassword), clean(propDatasourcePassword), clean(envDbPassword));
+        String driver = firstNonEmpty(clean(springDatasourceDriver), clean(propDatasourceDriver));
+
         String finalJdbcUrl;
+        String targetHost = "unknown";
+        String targetPort = "unknown";
+        String targetDb = "unknown";
 
         if (StringUtils.hasText(rawUrl)) {
-            // Case A: Cloud URI format (postgres:// or postgresql://)
-            if (rawUrl.startsWith("postgres://") || rawUrl.startsWith("postgresql://")) {
-                try {
-                    URI dbUri = new URI(rawUrl);
-                    String userInfo = dbUri.getUserInfo();
-                    if (userInfo != null && userInfo.contains(":")) {
-                        String[] parts = userInfo.split(":", 2);
-                        username = URLDecoder.decode(parts[0], StandardCharsets.UTF_8);
-                        password = URLDecoder.decode(parts[1], StandardCharsets.UTF_8);
-                    } else if (userInfo != null) {
-                        username = URLDecoder.decode(userInfo, StandardCharsets.UTF_8);
-                    }
+            // Regex to parse any variant: [jdbc:][postgres|postgresql]://[user:pass@]host[:port][/db][?query]
+            Pattern credPattern = Pattern.compile("^(?:jdbc:)?(?:postgres(?:ql)?)://(?:([^:@/]+)(?::([^@/]*))?@)?([^:/]+)(?::(\\d+))?(/[^?#]*)?(?:\\?(.*))?$");
+            Matcher m = credPattern.matcher(rawUrl);
 
-                    String host = dbUri.getHost();
-                    int port = dbUri.getPort() == -1 ? 5432 : dbUri.getPort();
-                    String path = dbUri.getPath();
+            if (m.matches()) {
+                String uriUser = m.group(1);
+                String uriPass = m.group(2);
+                targetHost = m.group(3);
+                targetPort = m.group(4) != null ? m.group(4) : "5432";
+                targetDb = m.group(5) != null ? m.group(5) : "/shopnest";
+                String query = m.group(6);
 
-                    StringBuilder jdbc = new StringBuilder();
-                    jdbc.append("jdbc:postgresql://").append(host).append(":").append(port).append(path);
+                if (uriUser != null && !StringUtils.hasText(username)) {
+                    username = urlDecode(uriUser);
+                }
+                if (uriPass != null && !StringUtils.hasText(password)) {
+                    password = urlDecode(uriPass);
+                }
 
-                    boolean isLocal = "localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host);
-                    String query = dbUri.getQuery();
+                StringBuilder jdbc = new StringBuilder();
+                jdbc.append("jdbc:postgresql://").append(targetHost).append(":").append(targetPort).append(targetDb);
 
-                    if (!isLocal) {
-                        // Render and cloud PostgreSQL require sslmode=require
-                        if (!StringUtils.hasText(query)) {
-                            jdbc.append("?sslmode=require");
-                        } else if (!query.contains("sslmode=")) {
-                            jdbc.append("?").append(query).append("&sslmode=require");
-                        } else {
-                            jdbc.append("?").append(query);
-                        }
-                    } else if (StringUtils.hasText(query)) {
+                boolean isLocal = "localhost".equalsIgnoreCase(targetHost) || "127.0.0.1".equals(targetHost);
+                if (!isLocal) {
+                    if (!StringUtils.hasText(query)) {
+                        jdbc.append("?sslmode=require");
+                    } else if (!query.contains("sslmode=")) {
+                        jdbc.append("?").append(query).append("&sslmode=require");
+                    } else {
                         jdbc.append("?").append(query);
                     }
+                } else if (StringUtils.hasText(query)) {
+                    jdbc.append("?").append(query);
+                }
 
-                    finalJdbcUrl = jdbc.toString();
-                    config.setDriverClassName("org.postgresql.Driver");
-                } catch (Exception e) {
-                    log.error("Failed to parse database URI from {}: {}", source, e.getMessage(), e);
-                    throw new IllegalStateException("Failed to parse database URL from " + source + ": " + e.getMessage(), e);
-                }
-            } else if (rawUrl.startsWith("jdbc:postgresql:")) {
-                // Case B: JDBC PostgreSQL URL
-                boolean isLocal = rawUrl.contains("localhost") || rawUrl.contains("127.0.0.1");
-                if (!isLocal && !rawUrl.contains("sslmode=")) {
-                    rawUrl = rawUrl.contains("?") ? rawUrl + "&sslmode=require" : rawUrl + "?sslmode=require";
-                }
-                finalJdbcUrl = rawUrl;
-                config.setDriverClassName("org.postgresql.Driver");
+                finalJdbcUrl = jdbc.toString();
+                if (!StringUtils.hasText(driver)) driver = "org.postgresql.Driver";
             } else if (rawUrl.startsWith("jdbc:mysql:")) {
-                // Case C: JDBC MySQL URL
                 finalJdbcUrl = rawUrl;
-                config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+                if (!StringUtils.hasText(driver)) driver = "com.mysql.cj.jdbc.Driver";
+            } else if (rawUrl.startsWith("jdbc:")) {
+                finalJdbcUrl = rawUrl;
+                if (rawUrl.startsWith("jdbc:postgresql:") && !rawUrl.contains("localhost") && !rawUrl.contains("127.0.0.1") && !rawUrl.contains("sslmode=")) {
+                    finalJdbcUrl = rawUrl.contains("?") ? rawUrl + "&sslmode=require" : rawUrl + "?sslmode=require";
+                }
+                if (!StringUtils.hasText(driver)) driver = "org.postgresql.Driver";
             } else {
                 finalJdbcUrl = "jdbc:" + rawUrl;
+                if (!StringUtils.hasText(driver)) driver = "org.postgresql.Driver";
             }
         } else {
-            // Case D: Fallback to localhost
-            source = "LOCAL FALLBACK (No env var found)";
+            source = "FALLBACK (No environment variable found)";
+            targetHost = "localhost";
+            targetPort = "5432";
+            targetDb = "/shopnest";
             finalJdbcUrl = "jdbc:postgresql://localhost:5432/shopnest";
             if (!StringUtils.hasText(username)) username = "postgres";
             if (!StringUtils.hasText(password)) password = "root";
-            config.setDriverClassName("org.postgresql.Driver");
+            driver = "org.postgresql.Driver";
         }
 
         config.setJdbcUrl(finalJdbcUrl);
         if (StringUtils.hasText(username)) config.setUsername(username);
         if (StringUtils.hasText(password)) config.setPassword(password);
+        if (StringUtils.hasText(driver)) config.setDriverClassName(driver);
 
-        // Print prominent diagnostic logs to Render console
         log.info("==================================================================");
         log.info("DATABASE CONFIGURATION ACTIVE:");
-        log.info("  Source      : {}", source);
-        log.info("  JDBC URL    : {}", maskUrl(finalJdbcUrl));
-        log.info("  DB User     : {}", username != null ? username : "(none)");
-        if (finalJdbcUrl.contains("localhost") || finalJdbcUrl.contains("127.0.0.1")) {
-            log.warn("  ATTENTION   : Connecting to localhost. If running on Render, set DATABASE_URL in the Environment tab!");
+        log.info("  Config Source: {}", source);
+        log.info("  JDBC URL     : {}", maskUrl(finalJdbcUrl));
+        log.info("  Host         : {}", targetHost);
+        log.info("  DB Username  : {}", username != null ? username : "(none)");
+        log.info("  Driver Class : {}", driver);
+        if ("localhost".equalsIgnoreCase(targetHost) || "127.0.0.1".equals(targetHost)) {
+            log.warn("  WARNING: Connecting to localhost. Ensure DATABASE_URL or SPRING_DATASOURCE_URL is set in Render Environment!");
         }
         log.info("==================================================================");
 
-        // HikariCP connection pool settings tuned for cloud databases
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
-        config.setConnectionTimeout(60000); // 60s to allow idle cloud DBs to wake up
+        config.setConnectionTimeout(60000);
         config.setValidationTimeout(5000);
         config.setIdleTimeout(600000);
         config.setMaxLifetime(1800000);
@@ -198,18 +192,67 @@ public class DataSourceConfig {
         try {
             return new HikariDataSource(config);
         } catch (Exception e) {
-            log.error("==================================================================");
-            log.error("DATABASE CONNECTION ERROR: Failed to connect to database!");
-            log.error("  Target URL : {}", maskUrl(finalJdbcUrl));
-            log.error("  Details    : {}", e.getMessage());
-            log.error("==================================================================");
-            throw e;
+            StringBuilder errorReport = new StringBuilder();
+            errorReport.append("\n==================================================================\n");
+            errorReport.append("CRITICAL: DATABASE CONNECTION FAILED!\n");
+            errorReport.append("  Target JDBC URL: ").append(maskUrl(finalJdbcUrl)).append("\n");
+            errorReport.append("  Target Host    : ").append(targetHost).append("\n");
+            errorReport.append("  Target Port    : ").append(targetPort).append("\n");
+            errorReport.append("  Database Name  : ").append(targetDb).append("\n");
+            errorReport.append("  Username       : ").append(username != null ? username : "(none)").append("\n");
+            errorReport.append("  Error Chain    :\n");
+            Throwable curr = e;
+            while (curr != null) {
+                errorReport.append("    -> [").append(curr.getClass().getSimpleName()).append("] ").append(curr.getMessage()).append("\n");
+                curr = curr.getCause();
+            }
+
+            if (targetHost != null && targetHost.matches("dpg-[a-z0-9]+(-a)?")) {
+                errorReport.append("\n  DIAGNOSIS:\n");
+                errorReport.append("  Host '").append(targetHost).append("' is a Render Internal Database hostname.\n");
+                errorReport.append("  Internal URLs only resolve if your Web Service and Database are in the SAME Render Region!\n");
+                errorReport.append("  -> FIX: In Render, go to your Postgres database, copy the 'External Database URL',\n");
+                errorReport.append("     and update SPRING_DATASOURCE_URL (or DATABASE_URL) in your Web Service Environment tab.\n");
+            } else if ("localhost".equalsIgnoreCase(targetHost) || "127.0.0.1".equals(targetHost)) {
+                errorReport.append("\n  DIAGNOSIS:\n");
+                errorReport.append("  The application attempted to connect to localhost:5432, which does not exist in Render.\n");
+                errorReport.append("  -> FIX: Provide your remote Postgres connection string in your Render Environment tab.\n");
+            }
+
+            errorReport.append("==================================================================\n");
+            log.error(errorReport.toString());
+            throw new RuntimeException(errorReport.toString(), e);
         }
+    }
+
+    private String clean(String val) {
+        if (!StringUtils.hasText(val)) return null;
+        String trimmed = val.trim();
+        // Remove surrounding quotes if accidentally entered in Render UI
+        if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+            (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+            trimmed = trimmed.substring(1, trimmed.length() - 1).trim();
+        }
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String urlDecode(String val) {
+        try {
+            return URLDecoder.decode(val, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return val;
+        }
+    }
+
+    private String firstNonEmpty(String... values) {
+        for (String v : values) {
+            if (StringUtils.hasText(v)) return v;
+        }
+        return null;
     }
 
     private String maskUrl(String url) {
         if (url == null) return null;
-        // Hide password if embedded in URL
         return url.replaceAll(":[^:@/]+@", ":****@");
     }
 }
