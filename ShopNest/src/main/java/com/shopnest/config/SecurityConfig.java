@@ -53,12 +53,14 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorize -> authorize
                 // Publicly accessible paths
-                .requestMatchers("/", "/login", "/register", "/products/**", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/", "/login", "/register", "/products/**", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
                 // Admin specific paths
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // All other requests require authentication (cart, checkout, order history)
                 .anyRequest().authenticated()
             )
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("email") // Login with email

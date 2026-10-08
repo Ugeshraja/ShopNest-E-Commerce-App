@@ -141,6 +141,11 @@ public class DataSourceConfig {
 
                 finalJdbcUrl = jdbc.toString();
                 if (!StringUtils.hasText(driver)) driver = "org.postgresql.Driver";
+            } else if (rawUrl.startsWith("jdbc:h2:")) {
+                finalJdbcUrl = rawUrl;
+                if (!StringUtils.hasText(driver)) driver = "org.h2.Driver";
+                if (!StringUtils.hasText(username)) username = "sa";
+                if (!StringUtils.hasText(password)) password = "";
             } else if (rawUrl.startsWith("jdbc:mysql:")) {
                 finalJdbcUrl = rawUrl;
                 if (!StringUtils.hasText(driver)) driver = "com.mysql.cj.jdbc.Driver";
@@ -155,14 +160,14 @@ public class DataSourceConfig {
                 if (!StringUtils.hasText(driver)) driver = "org.postgresql.Driver";
             }
         } else {
-            source = "FALLBACK (No environment variable found)";
-            targetHost = "localhost";
-            targetPort = "5432";
-            targetDb = "/shopnest";
-            finalJdbcUrl = "jdbc:postgresql://localhost:5432/shopnest";
-            if (!StringUtils.hasText(username)) username = "postgres";
-            if (!StringUtils.hasText(password)) password = "root";
-            driver = "org.postgresql.Driver";
+            source = "LOCAL IN-MEMORY H2 DATABASE";
+            targetHost = "in-memory (H2)";
+            targetPort = "N/A";
+            targetDb = "shopnest";
+            finalJdbcUrl = "jdbc:h2:mem:shopnest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
+            if (!StringUtils.hasText(username)) username = "sa";
+            if (!StringUtils.hasText(password)) password = "";
+            driver = "org.h2.Driver";
         }
 
         config.setJdbcUrl(finalJdbcUrl);
